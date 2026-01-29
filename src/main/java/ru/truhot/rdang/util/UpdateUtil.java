@@ -48,13 +48,13 @@ public class UpdateUtil {
                         plugin.getLogger().warning("Новая версия: " + latestVersion);
                         plugin.getLogger().warning("========================================");
                     } else {
-                        plugin.getLogger().info("Rdang | Актуальная версия: " + currentVersion);
+                        plugin.getLogger().info("| Актуальная версия: " + currentVersion);
                     }
                 } else {
-                    plugin.getLogger().warning("Rdang | Ошибка HTTP: " + response.statusCode());
+                    plugin.getLogger().warning("| Ошибка HTTP: " + response.statusCode());
                 }
             } catch (Exception e) {
-                plugin.getLogger().severe("Rdang | Ошибка обновления: " + e.getMessage());
+                plugin.getLogger().severe("| Ошибка обновления: " + e.getMessage());
             }
         });
     }
