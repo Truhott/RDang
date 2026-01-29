@@ -1,0 +1,12 @@
+particles:
+  type: totem # Тип частиц
+  count: 20 # Количество частиц
+  offsetX: 1.5 # Смещение по X
+  offsetY: 1.5 # Смещение по Y
+  offsetZ: 1.5 # Смещение по Z
+  extra: 0.1 # Дополнительный параметр
+sounds:
+  openSound: "ui_toast_challenge_complete" # Звук при открытии
+  lockedSound: "block_barrel_close" # Звук при закрыти
+  volume: 50 # Громкость (0-100)
+  pitch: 1.0 # Высота тона
