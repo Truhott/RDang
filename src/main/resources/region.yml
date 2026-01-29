@@ -1,0 +1,31 @@
+region:
+  size:
+    x: 24 # Ширина региона по оси X (восток-запад)
+    z: 24 # Длина региона по оси Z (север-юг)
+  name_format: "dang_{id}" #Название региона
+
+  height:
+    min: 0 # Минимальная высота (дно региона)
+    max: 255 # Максимальная высота (потолок региона)
+
+  flags: # флаги
+    use: "allow"
+    block_break: "deny"
+    build: "deny"
+    mob_spawning: "deny"
+    pvp: "allow"
+    tnt: "deny"
+    chest_access: "allow"
+    creeper_explosion: "deny"
+    damage_animals: "deny"
+    ghast_fireball: "deny"
+    respawn_anchors: "deny"
+    destroy_vehicle: "deny"
+    enderdragon_block_damage: "deny"
+    mob_damage: "deny"
+    lava_fire: "deny"
+    lightning: "deny"
+    lighter: "deny"
+
+check:
+  check_other_regions: true # Проверять пересечения с другими регионами
