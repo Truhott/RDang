@@ -224,7 +224,7 @@ public class DungeonListMenu extends AbstractMenu {
     }
 
     private ItemStack createPreviousPageItem() {
-        ItemStack head = HeadUtil.createSkullFromBase64("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzYyNTkwMmIzODllZDZjMTQ3NTc0ZTQyMmRhOGY4ZjM2MWM4ZWI1N2U3NjMxNjc2YTcyNzc3ZTdiMWQifX19");
+        ItemStack head = HeadUtil.createSkullFromBase64("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzYyNTkwMmIzODllZDZjMTQ3NTc0ZTQyMmRhOGY4ZjM2MWM4ZWI1N2U3NjMxNjc2YTcyNzc3ZTdiMWQifX19", "menu");
         ItemMeta meta = head.getItemMeta();
         if (meta != null) meta.setDisplayName(MessageUtil.colorize("§f[ §7← §f] §6Предыдущая страница"));
         head.setItemMeta(meta);
@@ -232,7 +232,7 @@ public class DungeonListMenu extends AbstractMenu {
     }
 
     private ItemStack createNextPageItem() {
-        ItemStack head = HeadUtil.createSkullFromBase64("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDRiZThhZWVjMTE4NDk2OTdhZGM2ZmQxZjE4OWIxNjY0MmRmZjE5ZjI5NTVjMDVkZWFiYTY4YzlkZmYxYmUifX19");
+        ItemStack head = HeadUtil.createSkullFromBase64("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDRiZThhZWVjMTE4NDk2OTdhZGM2ZmQxZjE4OWIxNjY0MmRmZjE5ZjI5NTVjMDVkZWFiYTY4YzlkZmYxYmUifX19", "menu");
         ItemMeta meta = head.getItemMeta();
         if (meta != null) meta.setDisplayName(MessageUtil.colorize("§6Следующая страница §f[ §7→ §f]"));
         head.setItemMeta(meta);
@@ -240,7 +240,7 @@ public class DungeonListMenu extends AbstractMenu {
     }
 
     private ItemStack createInfoItem() {
-        ItemStack head = HeadUtil.createSkullFromBase64("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTM1OWQ5MTI3NzI0MmZjMDFjMzA5YWNjYjg3YjUzM2YxOTI5YmUxNzZlY2JhMmNkZTYzYmY2MzVlMDVlNjk5YiJ9fX0=");
+        ItemStack head = HeadUtil.createSkullFromBase64("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTM1OWQ5MTI3NzI0MmZjMDFjMzA5YWNjYjg3YjUzM2YxOTI5YmUxNzZlY2JhMmNkZTYzYmY2MzVlMDVlNjk5YiJ9fX0=", "menu");
         ItemMeta meta = head.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(MessageUtil.colorize("§7[&#FEF06A₪§7] §fИнформация"));

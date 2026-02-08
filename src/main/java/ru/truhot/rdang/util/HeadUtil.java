@@ -2,41 +2,47 @@ package ru.truhot.rdang.util;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import java.lang.reflect.Field;
 import java.util.UUID;
+
 public class HeadUtil {
 
-    public static ItemStack createSkullFromBase64(String base64) {
+    public static ItemStack createSkullFromBase64(String base64, String sectionName) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         if (base64 == null || base64.isEmpty()) {
+            System.out.println("[Error] нету текстуры головы (base64 пустой) в секции " + sectionName);
             return head;
         }
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         if (meta == null) return head;
-        setSkullTexture(meta, base64);
+
+        setSkullTexture(meta, base64, sectionName);
         head.setItemMeta(meta);
         return head;
     }
 
-    public static ItemStack createSkullFromPrefixedString(String base64WithPrefix) {
+    public static ItemStack createSkullFromPrefixedString(String base64WithPrefix, String sectionName) {
         if (base64WithPrefix == null || base64WithPrefix.isEmpty()) {
+            System.out.println("[Error] нету значения материала для головы в секции " + sectionName);
             return new ItemStack(Material.PLAYER_HEAD);
         }
+
         if (!base64WithPrefix.toLowerCase().startsWith("basehead-")) {
-            return createSkullFromBase64(base64WithPrefix);
+            return createSkullFromBase64(base64WithPrefix, sectionName);
         }
+
         String base64 = base64WithPrefix.substring(9);
-        return createSkullFromBase64(base64);
+        return createSkullFromBase64(base64, sectionName);
     }
 
-
-    public static void setSkullTexture(SkullMeta meta, String texture) {
-        if (meta == null || texture == null || texture.isEmpty()) {
+    public static void setSkullTexture(SkullMeta meta, String texture, String sectionName) {
+        if (meta == null) return;
+        if (texture == null || texture.isEmpty()) {
+            System.out.println("[Error] нету текстуры для SkullMeta в секции " + sectionName);
             return;
         }
         try {
@@ -46,7 +52,6 @@ public class HeadUtil {
             profileField.setAccessible(true);
             profileField.set(meta, profile);
         } catch (Exception e) {
-            Bukkit.getLogger().warning("[HeadUtil] Ошибка при установке текстуры головы: " + e.getMessage());
         }
     }
 

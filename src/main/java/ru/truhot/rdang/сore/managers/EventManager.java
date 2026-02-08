@@ -239,37 +239,42 @@ public class EventManager implements Listener {
     @EventHandler(
             priority = EventPriority.HIGH
     )
+
     public void onCompassUse(PlayerInteractEvent event) {
-        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            ItemStack item = event.getItem();
-            if (item != null && item.getType() != Material.AIR) {
-                if (this.itemChecker.isCompassItem(item)) {
-                    event.setCancelled(true);
-                    Player player = event.getPlayer();
-                    Location randomDangLocation = this.getRandomDangLocation();
-                    if (randomDangLocation == null) {
-                        String noDangsMsg = this.configManager.getMessages().getString("messages.givecompass.no_dangs");
-                        if (noDangsMsg != null) {
-                            player.sendMessage(MessageUtil.colorize(noDangsMsg));
-                        }
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        ItemStack item = event.getItem();
+        if (item == null || item.getType() == Material.AIR) return;
+        if (!this.itemChecker.isCompassItem(item)) return;
+        event.setCancelled(true);
+        Player player = event.getPlayer();
+        if (player.hasCooldown(item.getType())) return;
+        Location randomDangLocation = this.getRandomDangLocation();
+        if (randomDangLocation == null) {
+            String noDangsMsg = this.configManager.getMessages().getString("messages.givecompass.no_dangs");
+            if (noDangsMsg != null) player.sendMessage(MessageUtil.colorize(noDangsMsg));
+            return;
+        }
 
-                    } else {
-                        String showingMsg = this.configManager.getMessages().getString("messages.givecompass.showing_location");
-                        if (showingMsg != null) {
-                            showingMsg = showingMsg.replace("{x}", String.valueOf(randomDangLocation.getBlockX())).replace("{y}", String.valueOf(randomDangLocation.getBlockY())).replace("{z}", String.valueOf(randomDangLocation.getBlockZ()));
-                            player.sendMessage(MessageUtil.colorize(showingMsg));
-                        }
+        String showingMsg = this.configManager.getMessages().getString("messages.givecompass.showing_location");
+        if (showingMsg != null) {
+            showingMsg = showingMsg.replace("{x}", String.valueOf(randomDangLocation.getBlockX()))
+                    .replace("{y}", String.valueOf(randomDangLocation.getBlockY()))
+                    .replace("{z}", String.valueOf(randomDangLocation.getBlockZ()));
+            player.sendMessage(MessageUtil.colorize(showingMsg));
+        }
 
-                        player.playSound(player.getLocation(), Sound.ITEM_LODESTONE_COMPASS_LOCK, 1.0F, 1.0F);
-                        if (item.getAmount() > 1) {
-                            item.setAmount(item.getAmount() - 1);
-                        } else {
-                            player.getInventory().setItem(event.getHand(), (ItemStack)null);
-                        }
-
-                    }
-                }
-            }
+        Sound sound = this.configManager.getItemManager().getCompassSoundEnum();
+        if (sound != null) {
+            player.playSound(player.getLocation(), sound, 1.0F, 1.0F);
+        }
+        long cooldownTicks = this.configManager.getItemManager().getCompassCooldown() * 20L;
+        if (cooldownTicks > 0) {
+            player.setCooldown(item.getType(), (int) cooldownTicks);
+        }
+        if (item.getAmount() > 1) {
+            item.setAmount(item.getAmount() - 1);
+        } else {
+            player.getInventory().setItem(event.getHand(), null);
         }
     }
 
@@ -313,6 +318,8 @@ public class EventManager implements Listener {
             return null;
         }
     }
+
+
 
     @EventHandler(
             priority = EventPriority.HIGH,
