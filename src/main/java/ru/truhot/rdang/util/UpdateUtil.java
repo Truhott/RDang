@@ -42,19 +42,22 @@ public class UpdateUtil {
                     String currentVersion = plugin.getDescription().getVersion().replace("v", "");
                     updateAvailable = needsUpdate(currentVersion, latestVersion);
                     if (updateAvailable) {
-                        plugin.getLogger().warning("========================================");
-                        plugin.getLogger().warning("Rdang | Найдено обновление!");
-                        plugin.getLogger().warning("Текущая версия: " + currentVersion);
-                        plugin.getLogger().warning("Новая версия: " + latestVersion);
-                        plugin.getLogger().warning("========================================");
+                        plugin.getLogger().warning("------------------------------------------");
+                        plugin.getLogger().warning("   [ ОБНОВЛЕНИЕ ДОСТУПНО ]");
+                        plugin.getLogger().warning("");
+                        plugin.getLogger().warning(" » Текущая версия: " + currentVersion);
+                        plugin.getLogger().warning(" » Новая версия:    " + latestVersion);
+                        plugin.getLogger().warning("");
+                        plugin.getLogger().warning(" Ссылка: github.com/Truhott/RDang/releases");
+                        plugin.getLogger().warning("------------------------------------------");
                     } else {
-                        plugin.getLogger().info("| Актуальная версия: " + currentVersion);
+                        plugin.getLogger().info("Актуальная версия: " + currentVersion);
                     }
                 } else {
-                    plugin.getLogger().warning("| Ошибка HTTP: " + response.statusCode());
+                    plugin.getLogger().warning("Ошибка HTTP: " + response.statusCode());
                 }
             } catch (Exception e) {
-                plugin.getLogger().severe("| Ошибка обновления: " + e.getMessage());
+                plugin.getLogger().severe("Ошибка обновления: " + e.getMessage());
             }
         });
     }

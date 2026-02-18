@@ -14,7 +14,7 @@ public class HeadUtil {
     public static ItemStack createSkullFromBase64(String base64, String sectionName) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         if (base64 == null || base64.isEmpty()) {
-            System.out.println("[Error] нету текстуры головы (base64 пустой) в секции " + sectionName);
+            System.out.println("[Rdang] нету текстуры головы (base64 пустой) в секции " + sectionName);
             return head;
         }
         SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -27,7 +27,7 @@ public class HeadUtil {
 
     public static ItemStack createSkullFromPrefixedString(String base64WithPrefix, String sectionName) {
         if (base64WithPrefix == null || base64WithPrefix.isEmpty()) {
-            System.out.println("[Error] нету значения материала для головы в секции " + sectionName);
+            System.out.println("[Rdang] нету значения материала для головы в секции " + sectionName);
             return new ItemStack(Material.PLAYER_HEAD);
         }
 
@@ -42,7 +42,7 @@ public class HeadUtil {
     public static void setSkullTexture(SkullMeta meta, String texture, String sectionName) {
         if (meta == null) return;
         if (texture == null || texture.isEmpty()) {
-            System.out.println("[Error] нету текстуры для SkullMeta в секции " + sectionName);
+            System.out.println("[Rdang] нету текстуры для SkullMeta в секции " + sectionName);
             return;
         }
         try {

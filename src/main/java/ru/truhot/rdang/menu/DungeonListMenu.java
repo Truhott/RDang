@@ -52,6 +52,7 @@ public class DungeonListMenu extends AbstractMenu {
         if (regionIds.isEmpty() && page == 0) {
             String message = configManager.getMessages().getString("messages.list.no-dungeons");
             player.sendMessage(MessageUtil.colorize(message));
+            player.closeInventory();
             return;
         }
         open(player, page);

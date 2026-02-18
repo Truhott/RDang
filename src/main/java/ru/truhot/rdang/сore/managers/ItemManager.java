@@ -34,9 +34,9 @@ public class ItemManager {
         ConfigurationSection keySection = section.getConfigurationSection("key");
         if (keySection != null) {
             this.key = loadItemFromConfig(keySection, "key");
-            if (!keySection.contains("chanceSpawn")) System.out.println("[Error] нету chanceSpawn в секции key");
+            if (!keySection.contains("chanceSpawn")) System.out.println("[Rdang] нету chanceSpawn в секции key");
             this.spawnChance = keySection.getInt("chanceSpawn");
-            if (!keySection.contains("saveChance")) System.out.println("[Error] нету saveChance в секции key");
+            if (!keySection.contains("saveChance")) System.out.println("[Rdang] нету saveChance в секции key");
             this.saveChance = keySection.getInt("saveChance");
         }
 
@@ -45,18 +45,18 @@ public class ItemManager {
             this.compass = loadItemFromConfig(compassSection, "compass");
             this.compassSound = compassSection.getString("sounds");
             if (this.compassSound == null) {
-                System.out.println("[Error] нету sounds в секции compass");
+                System.out.println("[Rdang] нету sounds в секции compass");
             } else {
                 try {
                     Sound.valueOf(this.compassSound.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    System.out.println("[Error] Неверный звук '" + this.compassSound + "' в секции compass");
+                    System.out.println("[Rdang] Неверный звук '" + this.compassSound + "' в секции compass");
                 }
             }
 
             String cooldownStr = compassSection.getString("сooldown");
             if (cooldownStr == null) {
-                System.out.println("[Error] нету сooldown в секции compass");
+                System.out.println("[Rdang] нету сooldown в секции compass");
             } else {
                 this.compassCooldown = TimeUtil.parseTimeString(cooldownStr);
             }
@@ -76,13 +76,13 @@ public class ItemManager {
         String materialName = section.getString("material");
         ItemStack item = null;
         if (materialName == null) {
-            System.out.println("[Error] нету material в секции " + section.getName());
+            System.out.println("[Rdang] нету material в секции " + section.getName());
         } else if (HeadUtil.isBase64Head(materialName)) {
             item = HeadUtil.createSkullFromPrefixedString(materialName, section.getName());
         } else {
             Material material = getMaterialFromString(materialName);
             if (material == null) {
-                System.out.println("[Error] Неверный material '" + materialName + "' в секции " + section.getName());
+                System.out.println("[Rdang] Неверный material '" + materialName + "' в секции " + section.getName());
             } else {
                 item = new ItemStack(material);
             }
@@ -109,7 +109,7 @@ public class ItemManager {
 
     private void applyEnchants(ItemMeta meta, ConfigurationSection section) {
         if (!section.contains("hideEnchantments")) {
-            System.out.println("[Error] нету hideEnchantments в секции " + section.getName());
+            System.out.println("[Rdang] нету hideEnchantments в секции " + section.getName());
         }
         if (meta == null) return;
         if (!section.getBoolean("hideEnchantments")) {
@@ -122,14 +122,14 @@ public class ItemManager {
     private void applyItemMeta(ItemMeta meta, ConfigurationSection section) {
         String name = section.getString("name");
         if (name == null) {
-            System.out.println("[Error] нету name в секции " + section.getName());
+            System.out.println("[Rdang] нету name в секции " + section.getName());
         } else if (meta != null) {
             meta.setDisplayName(MessageUtil.colorize(name));
         }
 
         List<String> lore = section.getStringList("lore");
         if (lore.isEmpty()) {
-            System.out.println("[Error] нету lore в секции " + section.getName());
+            System.out.println("[Rdang] нету lore в секции " + section.getName());
         } else if (meta != null) {
             meta.setLore(lore.stream()
                     .map(MessageUtil::colorize)
