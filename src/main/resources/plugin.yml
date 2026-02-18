@@ -1,5 +1,5 @@
 name: Rdang
-version: '1.3'
+version: '1.2'
 main: ru.truhot.rdang.RDang
 api-version: '1.16'
 author: Truhot
