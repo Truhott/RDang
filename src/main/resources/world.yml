@@ -9,7 +9,6 @@ dang:
     fileName: dang2.schem
     biome: the_end;end_highlands;end_midlands;end_barrens;small_end_islands
     world: world_the_end
-    type_open:
   3:
     fileName: grib1.schem
     biome: the_end;end_highlands;end_midlands;end_barrens;small_end_islands
