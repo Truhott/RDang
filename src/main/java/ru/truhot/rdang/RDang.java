@@ -45,10 +45,10 @@ public final class RDang extends JavaPlugin {
         getServer().getPluginManager().registerEvents(mainCore.getEventHandler(), this);
         getLogger().info("Rdang успешно запущен!");
         UpdateUtil updateUtil = new UpdateUtil(this);
-        if (getConfig().getBoolean("settings.update-check", true)) {
+        if (getConfig().getBoolean("settings.update-check")) {
             updateUtil.check();
         }
-        if (getConfig().getBoolean("settings.metrics", true)) {
+        if (getConfig().getBoolean("settings.metrics")) {
             int pluginId = 28720;
             new Metrics(this, pluginId);
             getLogger().info("bStats успешно инициализирован!");

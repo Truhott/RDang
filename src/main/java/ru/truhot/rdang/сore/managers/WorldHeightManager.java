@@ -129,9 +129,5 @@ public class WorldHeightManager {
         public void setWorldName(String worldName) {
             this.worldName = worldName;
         }
-
-        public String getDisplayName() {
-            return worldName != null ? worldName : worldType;
-        }
     }
 }

@@ -3,40 +3,36 @@ package ru.truhot.rdang.сore.managers;
 import lombok.Getter;
 import org.bukkit.configuration.ConfigurationSection;
 import ru.truhot.rdang.util.MessageUtil;
-
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 public class MessageManager {
-
-    private List<String> openDungMessages = new ArrayList<>();
-    private String saveKeyMessage = "";
-    private List<String> closedDungMessages = new ArrayList<>();
+    private List<String> openDungMessages;
+    private String saveKeyMessage;
+    private List<String> closedDungMessages;
 
     public void load(ConfigurationSection section) {
-        if (section == null) {
-            setDefaultMessages();
-            return;
-        }
         openDungMessages = MessageUtil.colorize(section.getStringList("openDung"));
-        saveKeyMessage = MessageUtil.colorize(section.getString("saveKey", "&aТы сохранил ключ"));
-        closedDungMessages = MessageUtil.colorize(section.getStringList("closedDung"));
-        if (openDungMessages.isEmpty()) {
-            openDungMessages = MessageUtil.colorize(List.of("", "&eИгрок &6{player} &eоткрыл хранилище", ""));
+        if (openDungMessages == null || openDungMessages.isEmpty()) {
+            System.out.println("[Rdang] В секции messages нет openDung или он пуст!");
+            openDungMessages = new ArrayList<>();
         }
-        if (closedDungMessages.isEmpty()) {
-            closedDungMessages = MessageUtil.colorize(List.of("", "&cХранилище закрыто!!", ""));
-        }
-    }
 
-    private void setDefaultMessages() {
-        openDungMessages = MessageUtil.colorize(List.of("", "&eИгрок &6{player} &eоткрыл хранилище", ""));
-        saveKeyMessage = MessageUtil.colorize("&aТы сохранил ключ");
-        closedDungMessages = MessageUtil.colorize(List.of("", "&cХранилище закрыто!!", ""));
+        saveKeyMessage = MessageUtil.colorize(section.getString("saveKey"));
+        if (saveKeyMessage == null || saveKeyMessage.isEmpty()) {
+            System.out.println("[Rdang] В секции messages нет saveKey или он пуст!");
+        }
+
+        closedDungMessages = MessageUtil.colorize(section.getStringList("closedDung"));
+        if (closedDungMessages == null || closedDungMessages.isEmpty()) {
+            System.out.println("[Rdang] В секции messages нет closedDung или он пуст!");
+            closedDungMessages = new ArrayList<>();
+        }
     }
 
     public List<String> getFormattedOpenDungMessages(String playerName) {
+        if (openDungMessages == null) return new ArrayList<>();
         List<String> formatted = new ArrayList<>();
         for (String message : openDungMessages) {
             formatted.add(message.replace("{player}", playerName));
