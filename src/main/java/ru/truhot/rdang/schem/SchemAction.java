@@ -20,7 +20,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import ru.truhot.rdang.RDang;
 import ru.truhot.rdang.config.ConfigManager;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,7 +27,6 @@ import java.io.IOException;
 
 @AllArgsConstructor
 public class SchemAction {
-
     private final RDang plugin;
     private final ConfigManager configManager;
 
@@ -78,19 +76,16 @@ public class SchemAction {
                                 );
                                 copy.setCopyingEntities(copyEntities);
                                 copy.setCopyingBiomes(copyBiomes);
-
                                 Operations.complete(copy);
                             } catch (WorldEditException e) {
-                                e.printStackTrace();
+                                System.out.println("[RDang] Ошибка WorldEdit при послойном спавне: " + e.getMessage());
                                 this.cancel();
                             }
-
                             currentY++;
                         }
                     }.runTaskTimer(plugin, 1L, 1L);
-
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.out.println("[RDang] Ошибка при чтении схемы для послойного спавна: " + fileName);
                 }
             }
         }.runTaskAsynchronously(plugin);
@@ -130,7 +125,7 @@ public class SchemAction {
                 Operations.complete(operation);
             }
         } catch (IOException | WorldEditException exception) {
-            exception.printStackTrace();
+            System.out.println("[RDang] Не удалось вставить схему: " + fileName);
         }
     }
 
@@ -147,7 +142,6 @@ public class SchemAction {
         if (!backupFile.getParentFile().exists()) {
             backupFile.getParentFile().mkdirs();
         }
-
         ClipboardFormat format = BuiltInClipboardFormat.SPONGE_SCHEMATIC;
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(location.getWorld()))) {
             com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard clipboard = new com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard(region);
@@ -160,7 +154,7 @@ public class SchemAction {
                 writer.write(clipboard);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("[RDang] Ошибка при создании бекапа для региона: " + regionName);
         }
     }
 }

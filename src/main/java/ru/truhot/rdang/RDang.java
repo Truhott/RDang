@@ -43,7 +43,7 @@ public final class RDang extends JavaPlugin {
         getCommand("rdang").setTabCompleter(new RTabCompleter(this));
         getServer().getPluginManager().registerEvents(mainCore, this);
         getServer().getPluginManager().registerEvents(mainCore.getEventHandler(), this);
-        getLogger().info("Rdang успешно запущен!");
+        System.out.println("[Rdang] успешно запущен!");
         UpdateUtil updateUtil = new UpdateUtil(this);
         if (getConfig().getBoolean("settings.update-check")) {
             updateUtil.check();
@@ -51,12 +51,12 @@ public final class RDang extends JavaPlugin {
         if (getConfig().getBoolean("settings.metrics")) {
             int pluginId = 28720;
             new Metrics(this, pluginId);
-            getLogger().info("bStats успешно инициализирован!");
+            System.out.println("[Rdang] bStats успешно инициализирован!");
         }
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("Rdang отключен!");
+        System.out.println("[Rdang] отключен!");
     }
 }

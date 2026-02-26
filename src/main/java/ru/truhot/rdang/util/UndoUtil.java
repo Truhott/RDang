@@ -19,17 +19,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import ru.truhot.rdang.RDang;
 import ru.truhot.rdang.config.ConfigManager;
 import ru.truhot.rdang.storage.Storage;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Objects;
+import java.util.List;
 
 public class UndoUtil {
-
     private final ConfigManager configManager;
     private final Storage shulkers;
     private final Storage blockStorage;
@@ -56,10 +56,11 @@ public class UndoUtil {
 
     public void saveDungeonData(String regionName, World world, BlockVector3 minPoint) {
         String path = "history." + regionName;
-        blockStorage.getConfig().set(path + ".world", world.getName());
-        blockStorage.getConfig().set(path + ".x", minPoint.getX());
-        blockStorage.getConfig().set(path + ".y", minPoint.getY());
-        blockStorage.getConfig().set(path + ".z", minPoint.getZ());
+        ConfigurationSection section = blockStorage.getConfig().createSection(path);
+        section.set("world", world.getName());
+        section.set("x", minPoint.getX());
+        section.set("y", minPoint.getY());
+        section.set("z", minPoint.getZ());
         blockStorage.save();
     }
 
@@ -67,13 +68,14 @@ public class UndoUtil {
         String path = "history." + regionName;
         ConfigurationSection data = blockStorage.getConfig().getConfigurationSection(path);
         if (data == null) {
-            return new UndoResult(0, "Unknown", false);
+            return new UndoResult(0, "Неизвестно", false);
         }
         String worldName = data.getString("world");
         World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
         if (world == null) return new UndoResult(0, worldName, false);
         BlockVector3 minPoint = BlockVector3.at(data.getInt("x"), data.getInt("y"), data.getInt("z"));
-        restoreLandscapeLayered(regionName, world, minPoint);
+        blockStorage.getConfig().set(path, null);
+        blockStorage.save();
         int removedCount = 0;
         RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
         RegionManager manager = container.get(BukkitAdapter.adapt(world));
@@ -81,12 +83,11 @@ public class UndoUtil {
             ProtectedRegion region = manager.getRegion(regionName);
             removedCount = removeShulkersInRegion(getRegionCenter(region, world), world);
             manager.removeRegion(regionName);
+            if (removedCount > 0) {
+                shulkers.save();
+            }
         }
-        blockStorage.getConfig().set(path, null);
-        blockStorage.save();
-        if (removedCount > 0) {
-            shulkers.save();
-        }
+        restoreLandscapeLayered(regionName, world, minPoint);
         return new UndoResult(removedCount, worldName, true);
     }
 
@@ -109,9 +110,7 @@ public class UndoUtil {
                         @Override
                         public void run() {
                             if (currentY >= dimensions.getY()) {
-                                if (backupFile.exists()) {
-                                    backupFile.delete();
-                                }
+                                if (backupFile.exists()) backupFile.delete();
                                 this.cancel();
                                 return;
                             }
@@ -128,24 +127,24 @@ public class UndoUtil {
                                 );
                                 copy.setCopyingEntities(false);
                                 Operations.complete(copy);
-                            } catch (Exception ignored) {
+                            } catch (Exception e) {
+                                System.out.println("[RDang] Ошибка при восстановлении слоя " + currentY + " для " + regionName);
                             }
-
                             currentY++;
                         }
                     }.runTaskTimer(plugin, 1L, 1L);
-
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    System.out.println("[RDang] Ошибка чтения бекапа для " + regionName);
                 }
             }
         }.runTaskAsynchronously(plugin);
     }
 
-    public void scheduleAutoUndoWithActionBar(String regionName, org.bukkit.World world,
-                                              com.sk89q.worldguard.protection.regions.ProtectedRegion region) {
+    public void scheduleAutoUndoWithActionBar(String regionName, World world, ProtectedRegion region) {
         String timeStr = configManager.getAuto().getString("auto.time");
-        long seconds = ru.truhot.rdang.util.TimeUtil.parseTimeString(timeStr);
-        new org.bukkit.scheduler.BukkitRunnable() {
+        long seconds = TimeUtil.parseTimeString(timeStr);
+        String rawMsg = configManager.getMessages().getString("messages.actionbar-timer");
+        new BukkitRunnable() {
             private long timeLeft = seconds;
             @Override
             public void run() {
@@ -154,18 +153,10 @@ public class UndoUtil {
                     this.cancel();
                     return;
                 }
-                String rawMsg = configManager.getMessages().getString("messages.actionbar-timer");
-                String formattedTime = ru.truhot.rdang.util.TimeUtil.formatTime(timeLeft);
-                String finalMsg = ru.truhot.rdang.util.MessageUtil.colorize(
-                        rawMsg.replace("{time}", formattedTime)
-                );
-                for (org.bukkit.entity.Player player : world.getPlayers()) {
-                    boolean isInRegion = region.contains(
-                            com.sk89q.worldedit.bukkit.BukkitAdapter.asBlockVector(
-                                    player.getLocation()
-                            )
-                    );
-                    if (isInRegion) {
+                String formattedTime = TimeUtil.formatTime(timeLeft);
+                String finalMsg = MessageUtil.colorize(rawMsg.replace("{time}", formattedTime));
+                for (Player player : world.getPlayers()) {
+                    if (region.contains(BukkitAdapter.asBlockVector(player.getLocation()))) {
                         player.spigot().sendMessage(
                                 net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
                                 new net.md_5.bungee.api.chat.TextComponent(finalMsg)
@@ -182,7 +173,7 @@ public class UndoUtil {
         if (locs == null) return 0;
         int radiusX = configManager.getRegion().getInt("region.size.x", 12);
         int radiusZ = configManager.getRegion().getInt("region.size.z", 12);
-        return (int) locs.getKeys(false).stream()
+        List<String> toRemove = locs.getKeys(false).stream()
                 .filter(key -> {
                     Location loc = locs.getLocation(key + ".location");
                     return loc != null &&
@@ -190,8 +181,9 @@ public class UndoUtil {
                             Math.abs(loc.getBlockX() - center.getBlockX()) <= radiusX &&
                             Math.abs(loc.getBlockZ() - center.getBlockZ()) <= radiusZ;
                 })
-                .peek(key -> locs.set(key, null))
-                .count();
+                .toList();
+        toRemove.forEach(key -> locs.set(key, null));
+        return toRemove.size();
     }
 
     private Location getRegionCenter(ProtectedRegion region, World world) {

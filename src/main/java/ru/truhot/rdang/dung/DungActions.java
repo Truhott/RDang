@@ -38,20 +38,20 @@ public class DungActions {
         final World world = loc.getWorld();
         final List<DangData> dangDataList = configManager.getDangManager().getDangs();
         int freeId = findFreeRegionId();
-        String nameFormat = configManager.getRegion().getString("region.name_format", "dang_{id}");
+        String nameFormat = configManager.getRegion().getString("region.name_format");
         String regionName = nameFormat.replace("{id}", String.valueOf(freeId));
         for (int i = 0; i < 20; i++) {
             DangData dangData = dangDataList.get(new Random().nextInt(dangDataList.size()));
             Biome currentBiome = world.getBiome(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
             if (dangData.getWorld().equals(world.getName()) && dangData.getBiome().contains(currentBiome)) {
-                int radiusX = configManager.getRegion().getInt("region.size.x", 12);
-                int radiusZ = configManager.getRegion().getInt("region.size.z", 12);
-                int minY = configManager.getRegion().getInt("region.height.min", 0);
+                int radiusX = configManager.getRegion().getInt("region.size.x");
+                int radiusZ = configManager.getRegion().getInt("region.size.z");
+                int minY = configManager.getRegion().getInt("region.height.min");
                 BlockVector3 minPoint = BlockVector3.at(loc.getBlockX() - radiusX, minY, loc.getBlockZ() - radiusZ);
                 schemAction.createBackup(loc, regionName);
                 undoUtil.saveDungeonData(regionName, world, minPoint);
                 schemAction.spawnSchem(loc, dangData.getFileName());
-                int maxY = configManager.getRegion().getInt("region.height.max", 255);
+                int maxY = configManager.getRegion().getInt("region.height.max");
                 addShulkers.addShulkersInRegion(loc, radiusX, radiusZ, minY, maxY);
                 createRegionWithId(loc.getBlockX(), loc.getBlockZ(), world, freeId);
                 return;
@@ -66,11 +66,11 @@ public class DungActions {
 
     public String createRegionWithId(int x, int z, World worldBukkit, int id) {
         final RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-        int radiusX = configManager.getRegion().getInt("region.size.x", 12);
-        int radiusZ = configManager.getRegion().getInt("region.size.z", 12);
-        int minY = configManager.getRegion().getInt("region.height.min", 0);
-        int maxY = configManager.getRegion().getInt("region.height.max", 255);
-        String nameFormat = configManager.getRegion().getString("region.name_format", "dang_{id}");
+        int radiusX = configManager.getRegion().getInt("region.size.x");
+        int radiusZ = configManager.getRegion().getInt("region.size.z");
+        int minY = configManager.getRegion().getInt("region.height.min");
+        int maxY = configManager.getRegion().getInt("region.height.max");
+        String nameFormat = configManager.getRegion().getString("region.name_format");
         String regionName = nameFormat.replace("{id}", String.valueOf(id));
         if (container != null) {
             final RegionManager regionManager = container.get(BukkitAdapter.adapt(worldBukkit));
@@ -88,7 +88,7 @@ public class DungActions {
     public int findFreeRegionId() {
         RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
         if (container == null) return 1;
-        String nameFormat = configManager.getRegion().getString("region.name_format", "dang_{id}");
+        String nameFormat = configManager.getRegion().getString("region.name_format");
         int id = 1;
         while (true) {
             String regionName = nameFormat.replace("{id}", String.valueOf(id));
@@ -128,7 +128,7 @@ public class DungActions {
         if (container == null) return false;
         RegionManager manager = container.get(BukkitAdapter.adapt(loc.getWorld()));
         if (manager == null) return false;
-        String prefix = configManager.getRegion().getString("region.name_format", "dang_").replace("{id}", "");
+        String prefix = configManager.getRegion().getString("region.name_format").replace("{id}", "");
         return manager.getRegions().values().stream()
                 .filter(r -> r.getId().startsWith(prefix))
                 .anyMatch(r -> {
@@ -145,7 +145,7 @@ public class DungActions {
         if (container == null) return false;
         RegionManager manager = container.get(BukkitAdapter.adapt(location.getWorld()));
         if (manager == null) return false;
-        String prefix = configManager.getRegion().getString("region.name_format", "dang_").replace("{id}", "");
+        String prefix = configManager.getRegion().getString("region.name_format").replace("{id}", "");
         BlockVector3 vector = BukkitAdapter.asBlockVector(location);
         return manager.getApplicableRegions(vector).getRegions().stream()
                 .anyMatch(r -> !r.getId().startsWith(prefix));
