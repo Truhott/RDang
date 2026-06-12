@@ -1,10 +1,8 @@
 package ru.truhot.rdang.menu;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -23,18 +21,19 @@ import java.util.*;
 public class ListMenu extends AbstractMenu {
     private static final int ITEMS_PER_PAGE = 45, INVENTORY_SIZE = 54, NEXT_PAGE_SLOT = 50, PREV_PAGE_SLOT = 48, DELETE_ALL_SLOT = 49;
     private final TeleportUtil teleportUtil;
-    private final Storage shulkers, blockStorage;
+    private final Storage shulkers;
+    private final UndoUtil undoUtil;
     private final String prefix;
     private final String suffix;
     private final ItemStack guiGlass = createPane(Material.BLACK_STAINED_GLASS_PANE, " ");
     private final ItemStack nextBtn, prevBtn, deleteAllBtn;
     private final Map<Material, ItemStack> dungeonTemplates = new EnumMap<>(Material.class);
 
-    public ListMenu(ConfigManager configManager, Storage shulkers, Storage blockStorage, RDang plugin) {
+    public ListMenu(ConfigManager configManager, Storage shulkers, RDang plugin, UndoUtil undoUtil) {
         super(configManager, plugin);
         this.shulkers = shulkers;
-        this.blockStorage = blockStorage;
-        this.teleportUtil = new TeleportUtil(configManager);
+        this.undoUtil = undoUtil;
+        this.teleportUtil = new TeleportUtil(configManager, shulkers);
         String format = configManager.getRegion().getString("region.name_format", "dang_{id}");
         if (format.contains("{id}")) {
             String[] parts = format.split("\\{id\\}", 2);
@@ -125,12 +124,7 @@ public class ListMenu extends AbstractMenu {
         if (slot == DELETE_ALL_SLOT) {
             List<String> allIds = getIds();
             if (allIds.isEmpty()) return;
-            UndoUtil undoUtil = new UndoUtil(configManager, shulkers, blockStorage, plugin);
-            int count = 0;
-            for (String rId : allIds) {
-                UndoUtil.UndoResult res = undoUtil.performUndo(rId);
-                if (res.found) count++;
-            }
+            int count = undoUtil.performUndoAll(allIds);
             player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_GENERIC_EXPLODE, 0.5f, 1.2f);
 
             player.sendMessage(MessageUtil.colorize("&7[&#6AFE76☑&7] &fУспешно удалено &#557c93" + count + " &fданжей."));
@@ -162,7 +156,7 @@ public class ListMenu extends AbstractMenu {
                     teleportUtil.teleport(player, rId);
                 }
                 else if (e.isLeftClick()) {
-                    UndoUtil.UndoResult res = new UndoUtil(configManager, shulkers, blockStorage, plugin).performUndo(rId);
+                    UndoUtil.UndoResult res = undoUtil.performUndo(rId);
 
                     if (res.found) {
                         player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_ANVIL_BREAK, 0.5f, 1.5f);
@@ -190,12 +184,7 @@ public class ListMenu extends AbstractMenu {
 
     private String getCoords(World w, String id) {
         if (w == null) return "N/A";
-        try {
-            ProtectedRegion r = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(w)).getRegion(id);
-            if (r == null) return "N/A";
-            BlockVector3 min = r.getMinimumPoint(), max = r.getMaximumPoint();
-            return String.format("%d, %d, %d", (min.getBlockX()+max.getBlockX())/2, (min.getBlockY()+max.getBlockY())/2, (min.getBlockZ()+max.getBlockZ())/2);
-        } catch (Exception e) { return "N/A"; }
+        return teleportUtil.formatCoords(id);
     }
 
     private int getNumber(String id) {

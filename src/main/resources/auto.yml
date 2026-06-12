@@ -1,3 +1,12 @@
 auto:
-  enabled: true  # Если поставить false, автоматическое удаление работать не будет
-  time: "10s" # Можно "1m 30s", "1h", "1d" и т.д.
+  enabled: true
+  time: "10s"    # Время до авто-очистки: "1m 30s", "1h", "1d"
+
+  actionbar:
+    enabled: true
+    timer: "&7[&#6AFE76☑&7] &fДанж будет удален через &#557c93{time}"
+
+  respawn:
+    enabled: false
+    delay: 20
+    only-players: false

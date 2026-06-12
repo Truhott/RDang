@@ -21,9 +21,12 @@ import ru.truhot.rdang.config.ConfigManager;
 import ru.truhot.rdang.data.DangData;
 import ru.truhot.rdang.schem.SchemAction;
 import ru.truhot.rdang.util.UndoUtil;
+import ru.truhot.rdang.util.logger.Logger;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @AllArgsConstructor
 @Getter
@@ -32,20 +35,32 @@ public class DungActions {
     private final AddShulkers addShulkers;
     private final ConfigManager configManager;
     private final UndoUtil undoUtil;
+    private final Set<String> reservedRegionIds = ConcurrentHashMap.newKeySet();
 
     public void spawn(@NotNull Location loc) {
+        spawn(loc, null);
+    }
+
+    public void spawn(@NotNull Location loc, String excludeSchematic) {
         int minDist = configManager.getRegion().getInt("check.distance-dangs");
         boolean checkOtherRegions = configManager.getRegion().getBoolean("check.check_other_regions");
         if (checkDistance(loc, minDist)) return;
         if (checkOtherRegions && checkInside(loc)) return;
         final World world = loc.getWorld();
         final List<DangData> dangDataList = configManager.getDangManager().getDangs();
-        int freeId = getFreeId();
         String nameFormat = configManager.getRegion().getString("region.name_format");
-        String regionName = nameFormat.replace("{id}", String.valueOf(freeId));
-        for (int i = 0; i < 20; i++) {
-            DangData dangData = dangDataList.get(new Random().nextInt(dangDataList.size()));
+        int freeId = getFreeId();
+        String regionName = reserveRegionName(nameFormat, freeId);
+        if (regionName == null) {
+            return;
+        }
+        Random random = new Random();
+        for (int i = 0; i < 30; i++) {
+            DangData dangData = dangDataList.get(random.nextInt(dangDataList.size()));
             Biome currentBiome = world.getBiome(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+            if (excludeSchematic != null && dangData.getFileName() != null && dangData.getFileName().equalsIgnoreCase(excludeSchematic)) {
+                continue;
+            }
             if (dangData.getWorld().equals(world.getName()) && dangData.getBiome().contains(currentBiome)) {
                 int radiusX = configManager.getRegion().getInt("region.size.x");
                 int radiusZ = configManager.getRegion().getInt("region.size.z");
@@ -53,15 +68,56 @@ public class DungActions {
                 BlockVector3 minPoint = BlockVector3.at(loc.getBlockX() - radiusX, minY, loc.getBlockZ() - radiusZ);
                 int maxY = configManager.getRegion().getInt("region.height.max");
                 DangData selected = dangData;
-                schemAction.createBackup(loc, regionName, () -> {
-                    undoUtil.saveDungeonData(regionName, world, minPoint);
-                    schemAction.spawnSchem(loc, selected.getFileName());
-                    addShulkers.addShulkers(loc, radiusX, radiusZ, minY, maxY);
-                    buildRegion(loc.getBlockX(), loc.getBlockZ(), world, freeId);
+                undoUtil.captureTerrainAndSave(regionName, loc, minPoint, selected.getFileName(), terrainOk -> {
+                    if (terrainOk == null || !terrainOk) {
+                        reservedRegionIds.remove(regionName.toLowerCase());
+                        Logger.warn("Спавн данжа отменён: территория не сохранилась, region=" + regionName);
+                        return;
+                    }
+                    schemAction.spawnSchem(loc, selected.getFileName(), (ok) -> {
+                        reservedRegionIds.remove(regionName.toLowerCase());
+                        if (!ok) {
+                            Logger.warn("Спавн данжа отменён: схема не вставилась, region=" + regionName + ", file=" + selected.getFileName());
+                            return;
+                        }
+                        addShulkers.addShulkers(loc, radiusX, radiusZ, minY, maxY);
+                        buildRegion(loc.getBlockX(), loc.getBlockZ(), world, freeId);
+                    });
                 });
                 return;
             }
         }
+
+        reservedRegionIds.remove(regionName.toLowerCase());
+    }
+
+    private String reserveRegionName(String nameFormat, int startId) {
+        int id = Math.max(1, startId);
+        for (int tries = 0; tries < 10000; tries++) {
+            String regionName = nameFormat.replace("{id}", String.valueOf(id));
+            String key = regionName.toLowerCase();
+            if (reservedRegionIds.add(key)) {
+                if (isRegionNameTakenInAnyWorld(regionName)) {
+                    reservedRegionIds.remove(key);
+                } else {
+                    return regionName;
+                }
+            }
+            id++;
+        }
+        return null;
+    }
+
+    private boolean isRegionNameTakenInAnyWorld(String regionName) {
+        RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+        if (container == null) return false;
+        for (World world : Bukkit.getWorlds()) {
+            RegionManager regionManager = container.get(BukkitAdapter.adapt(world));
+            if (regionManager != null && regionManager.hasRegion(regionName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public String buildRegion(int x, int z, World worldBukkit, int id) {
@@ -92,6 +148,10 @@ public class DungActions {
         int id = 1;
         while (true) {
             String regionName = nameFormat.replace("{id}", String.valueOf(id));
+            if (reservedRegionIds.contains(regionName.toLowerCase())) {
+                id++;
+                continue;
+            }
             boolean isFree = true;
             for (World world : Bukkit.getWorlds()) {
                 RegionManager regionManager = container.get(BukkitAdapter.adapt(world));

@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+
+import java.util.Collection;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -31,6 +33,10 @@ public class MainCore implements Listener {
 
     public void addShulker(Location location) {
         shulkerManager.addShulker(location);
+    }
+
+    public int addShulkers(Collection<Location> locations) {
+        return shulkerManager.addShulkers(locations);
     }
 
     public void addShulkerConfig(String id, Location location, boolean opened) {

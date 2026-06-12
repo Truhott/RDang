@@ -38,6 +38,22 @@ public class SpawnManager {
         return null;
     }
 
+    public int findSurfaceY(World world, int x, int z) {
+        if (configManager == null || configManager.getHeightManager() == null) {
+            return world.getHighestBlockYAt(x, z);
+        }
+        WorldHeightManager.WorldHeightConfig hConfig = configManager.getHeightManager().getWorldHeightConfig(world);
+        Environment env = world.getEnvironment();
+        if (env == Environment.NETHER) {
+            return getNetherHeight(world, x, z, hConfig);
+        }
+        if (env == Environment.THE_END) {
+            return getEndHeight(world, x, z, hConfig);
+        }
+        int y = getSurfaceHeight(world, x, z, hConfig);
+        return y != Integer.MIN_VALUE ? y : world.getHighestBlockYAt(x, z);
+    }
+
     public int getSuitableHeight(World world, int x, int z, Random random) {
         if (configManager == null || configManager.getHeightManager() == null)
             return world.getHighestBlockYAt(x, z);

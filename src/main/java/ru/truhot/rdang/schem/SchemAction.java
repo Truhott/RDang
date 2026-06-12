@@ -3,17 +3,13 @@ package ru.truhot.rdang.schem;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
-import com.sk89q.worldedit.extent.clipboard.io.BuiltInClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
 import lombok.AllArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -27,7 +23,7 @@ import ru.truhot.rdang.util.logger.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.util.function.Consumer;
 
 @AllArgsConstructor
 public class SchemAction {
@@ -35,24 +31,44 @@ public class SchemAction {
     private final ConfigManager configManager;
 
     public void spawnSchem(@NotNull Location location, @NotNull String fileName) {
+        spawnSchem(location, fileName, null);
+    }
+
+    public void spawnSchem(@NotNull Location location, @NotNull String fileName, @Nullable Consumer<Boolean> onComplete) {
         File schemFile = new File(plugin.getDataFolder() + "/schem/" + fileName);
         if (!schemFile.exists()) {
-            File faweFolder = new File(Bukkit.getPluginManager().getPlugin("FastAsyncWorldEdit").getDataFolder(), "schematics");
-            File alternativeFile = new File(faweFolder, fileName);
-            if (alternativeFile.exists()) {
-                schemFile = alternativeFile;
-            } else {
-                File weFolder = new File(Bukkit.getPluginManager().getPlugin("WorldEdit").getDataFolder(), "schematics");
-                alternativeFile = new File(weFolder, fileName);
+            var fawe = Bukkit.getPluginManager().getPlugin("FastAsyncWorldEdit");
+            if (fawe != null) {
+                File faweFolder = new File(fawe.getDataFolder(), "schematics");
+                File alternativeFile = new File(faweFolder, fileName);
                 if (alternativeFile.exists()) {
                     schemFile = alternativeFile;
                 }
             }
+
+            if (!schemFile.exists()) {
+                var we = Bukkit.getPluginManager().getPlugin("WorldEdit");
+                if (we != null) {
+                    File weFolder = new File(we.getDataFolder(), "schematics");
+                    File alternativeFile = new File(weFolder, fileName);
+                    if (alternativeFile.exists()) {
+                        schemFile = alternativeFile;
+                    }
+                }
+            }
         }
-        if (!schemFile.exists()) return;
+        if (!schemFile.exists()) {
+            Logger.warn("Схема не найдена: " + fileName);
+            runComplete(onComplete, false);
+            return;
+        }
         final File finalFile = schemFile;
         ClipboardFormat format = ClipboardFormats.findByFile(finalFile);
-        if (format == null) return;
+        if (format == null) {
+            Logger.error("Неизвестный формат схемы: " + finalFile.getName());
+            runComplete(onComplete, false);
+            return;
+        }
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -70,6 +86,7 @@ public class SchemAction {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
+                            boolean pasted = false;
                             try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(targetLoc.getWorld()))) {
                                 ForwardExtentCopy copy = new ForwardExtentCopy(
                                         clipboard, clipboard.getRegion(), editSession, clipboard.getMinimumPoint().add(offset)
@@ -82,84 +99,27 @@ public class SchemAction {
                                     ));
                                 }
                                 Operations.complete(copy);
+                                pasted = true;
                             } catch (Exception e) {
                                 Logger.error("Не удалось вставить схему: " + fileName);
                             }
+                            runComplete(onComplete, pasted);
                         }
                     }.runTask(plugin);
                 } catch (Exception e) {
                     Logger.error("Ошибка при чтении схемы: " + fileName);
+                    runComplete(onComplete, false);
                 }
             }
         }.runTaskAsynchronously(plugin);
     }
 
-    public void createBackup(@NotNull Location location, @NotNull String regionName) {
-        createBackup(location, regionName, null);
-    }
-
-
-    public void createBackup(@NotNull Location location, @NotNull String regionName, @Nullable Runnable onComplete) {
-        CuboidRegion region = buildBackupRegion(location);
-        File backupFile = backupFile(regionName);
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                BlockArrayClipboard clipboard;
-                try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(location.getWorld()))) {
-                    clipboard = new BlockArrayClipboard(region);
-                    clipboard.setOrigin(region.getMinimumPoint());
-                    ForwardExtentCopy copy = new ForwardExtentCopy(editSession, region, clipboard, region.getMinimumPoint());
-                    copy.setCopyingEntities(false);
-                    Operations.complete(copy);
-                } catch (Exception e) {
-                    Logger.error("Ошибка чтения ландшафта для бэкапа: " + regionName);
-                    runCallback(onComplete);
-                    return;
-                }
-
-                BlockArrayClipboard finalClipboard = clipboard;
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (!backupFile.getParentFile().exists()) {
-                                backupFile.getParentFile().mkdirs();
-                            }
-                            try (ClipboardWriter writer = BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(new FileOutputStream(backupFile))) {
-                                writer.write(finalClipboard);
-                            }
-                        } catch (Exception e) {
-                            Logger.error("Ошибка записи бэкапа: " + regionName);
-                        }
-                        runCallback(onComplete);
-                    }
-                }.runTaskAsynchronously(plugin);
-            }
-        }.runTask(plugin);
-    }
-
-    public File backupFile(String regionName) {
-        return new File(plugin.getDataFolder(), "backups/" + regionName + ".schem");
-    }
-
-    public CuboidRegion buildBackupRegion(Location location) {
-        int radiusX = configManager.getRegion().getInt("region.size.x", 12);
-        int radiusZ = configManager.getRegion().getInt("region.size.z", 12);
-        int minY = configManager.getRegion().getInt("region.height.min", 0);
-        int maxY = configManager.getRegion().getInt("region.height.max", 255);
-        BlockVector3 min = BlockVector3.at(location.getBlockX() - radiusX, minY, location.getBlockZ() - radiusZ);
-        BlockVector3 max = BlockVector3.at(location.getBlockX() + radiusX, maxY, location.getBlockZ() + radiusZ);
-        return new CuboidRegion(BukkitAdapter.adapt(location.getWorld()), min, max);
-    }
-
-    private void runCallback(@Nullable Runnable onComplete) {
+    private void runComplete(@Nullable Consumer<Boolean> onComplete, boolean ok) {
         if (onComplete == null) return;
         new BukkitRunnable() {
             @Override
             public void run() {
-                onComplete.run();
+                onComplete.accept(ok);
             }
         }.runTask(plugin);
     }

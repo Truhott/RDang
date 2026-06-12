@@ -183,15 +183,19 @@ public class EventManager implements Listener {
             }
             return;
         }
-        Location loc = this.getRandomLocation();
+        Location loc = this.getRandomLocation(player);
         if (loc == null) {
             String noDangs = this.configManager.getMessages().getString("messages.give.compass.no_dangs");
             if (noDangs != null) player.sendMessage(MessageUtil.colorize(noDangs));
             return;
         }
+        player.setCompassTarget(loc);
         String showMsg = this.configManager.getMessages().getString("messages.give.compass.showing_location");
         if (showMsg != null) {
-            player.sendMessage(MessageUtil.colorize(showMsg.replace("{x}", String.valueOf(loc.getBlockX())).replace("{y}", String.valueOf(loc.getBlockY())).replace("{z}", String.valueOf(loc.getBlockZ()))));
+            player.sendMessage(MessageUtil.colorize(showMsg
+                    .replace("{x}", String.valueOf(loc.getBlockX()))
+                    .replace("{y}", String.valueOf(loc.getBlockY()))
+                    .replace("{z}", String.valueOf(loc.getBlockZ()))));
         }
         Sound s = this.configManager.getItemManager().getCompassSound();
         if (s != null) player.playSound(player.getLocation(), s, 1.0F, 1.0F);
@@ -280,11 +284,21 @@ public class EventManager implements Listener {
                 });
     }
 
-    private Location getRandomLocation() {
+    private Location getRandomLocation(Player player) {
         ConfigurationSection sec = this.shulkers.getConfig().getConfigurationSection("locs");
         if (sec == null || sec.getKeys(false).isEmpty()) return null;
-        List<String> keys = new ArrayList<>(sec.getKeys(false));
-        return sec.getConfigurationSection(keys.get(this.random.nextInt(keys.size()))).getLocation("location");
+        String worldName = player.getWorld().getName();
+        List<Location> inWorld = new ArrayList<>();
+        for (String key : sec.getKeys(false)) {
+            ConfigurationSection shulker = sec.getConfigurationSection(key);
+            if (shulker == null) continue;
+            Location shulkerLoc = shulker.getLocation("location");
+            if (shulkerLoc != null && shulkerLoc.getWorld() != null && shulkerLoc.getWorld().getName().equals(worldName)) {
+                inWorld.add(shulkerLoc);
+            }
+        }
+        if (inWorld.isEmpty()) return null;
+        return inWorld.get(this.random.nextInt(inWorld.size()));
     }
 
     private boolean isSameLocation(Location l1, Location l2) {

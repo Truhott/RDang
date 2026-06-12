@@ -68,18 +68,25 @@ public class SchemCommand implements CommandExecutor {
             int minY = configManager.getRegion().getInt("region.height.min", -10);
             int maxY = configManager.getRegion().getInt("region.height.max", 10);
 
-            dungActions.getSchemAction().createBackup(spawnLocation, regionName, () -> {
-                undoUtil.saveDungeonData(regionName, spawnLocation.getWorld(),
-                        BlockVector3.at(spawnLocation.getBlockX() - rx, minY, spawnLocation.getBlockZ() - rz));
-                dungActions.getSchemAction().spawnSchem(spawnLocation, fileNameOnly);
-                dungActions.getAddShulkers().addShulkers(spawnLocation, rx, rz, minY, maxY);
-                dungActions.buildRegion(spawnLocation.getBlockX(), spawnLocation.getBlockZ(), spawnLocation.getWorld(), freeId);
-
-                player.sendMessage(MessageUtil.colorize(getMessage("schem.success")
-                        .replace("{schem}", fileNameOnly)
-                        .replace("{x}", String.valueOf(spawnLocation.getBlockX()))
-                        .replace("{y}", String.valueOf(spawnLocation.getBlockY()))
-                        .replace("{z}", String.valueOf(spawnLocation.getBlockZ()))));
+            BlockVector3 minPoint = BlockVector3.at(spawnLocation.getBlockX() - rx, minY, spawnLocation.getBlockZ() - rz);
+            undoUtil.captureTerrainAndSave(regionName, spawnLocation, minPoint, fileNameOnly, terrainOk -> {
+                if (terrainOk == null || !terrainOk) {
+                    player.sendMessage(MessageUtil.colorize(getMessage("schem.error").replace("{schem}", fileNameOnly)));
+                    return;
+                }
+                dungActions.getSchemAction().spawnSchem(spawnLocation, fileNameOnly, ok -> {
+                    if (!ok) {
+                        player.sendMessage(MessageUtil.colorize(getMessage("schem.error").replace("{schem}", fileNameOnly)));
+                        return;
+                    }
+                    dungActions.getAddShulkers().addShulkers(spawnLocation, rx, rz, minY, maxY);
+                    dungActions.buildRegion(spawnLocation.getBlockX(), spawnLocation.getBlockZ(), spawnLocation.getWorld(), freeId);
+                    player.sendMessage(MessageUtil.colorize(getMessage("schem.success")
+                            .replace("{schem}", fileNameOnly)
+                            .replace("{x}", String.valueOf(spawnLocation.getBlockX()))
+                            .replace("{y}", String.valueOf(spawnLocation.getBlockY()))
+                            .replace("{z}", String.valueOf(spawnLocation.getBlockZ()))));
+                });
             });
             return true;
         } catch (Exception e) {

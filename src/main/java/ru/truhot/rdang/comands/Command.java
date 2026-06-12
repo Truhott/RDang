@@ -32,7 +32,7 @@ public class Command implements CommandExecutor {
     private final MigrateCommand migrateCommand;
 
     public Command(MainCore mainCore, DungActions dungActions, RDang plugin,
-                   Storage items, Storage shulkers, Storage block,
+                   Storage items, Storage shulkers,
                    ConfigManager configManager, MenuManager menuManager, UndoUtil undoUtil,
                    ShulkerManager shulkerManager, UpdateUtil updateUtil) {
         this.plugin = plugin;

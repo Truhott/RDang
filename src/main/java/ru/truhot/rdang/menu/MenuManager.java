@@ -9,6 +9,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import ru.truhot.rdang.RDang;
 import ru.truhot.rdang.config.ConfigManager;
 import ru.truhot.rdang.storage.Storage;
+import ru.truhot.rdang.util.UndoUtil;
 import ru.truhot.rdang.сore.managers.LootManager;
 
 import java.util.EnumMap;
@@ -22,9 +23,9 @@ public class MenuManager implements Listener {
     private final LootEditMenu lootEditMenu;
     private final Map<UUID, MenuType> CloseMessageFor = new ConcurrentHashMap<>();
 
-    public MenuManager(ConfigManager configManager, Storage items, Storage shulkers, Storage blockStorage,
-                       RDang plugin, LootManager lootManager) {
-        menus.put(MenuType.DUNGEON_LIST, new ListMenu(configManager, shulkers, blockStorage, plugin));
+    public MenuManager(ConfigManager configManager, Storage items, Storage shulkers,
+                       RDang plugin, LootManager lootManager, UndoUtil undoUtil) {
+        menus.put(MenuType.DUNGEON_LIST, new ListMenu(configManager, shulkers, plugin, undoUtil));
         menus.put(MenuType.MAIN, new MainMenu(configManager, plugin, this));
         menus.put(MenuType.LOOT_PAGES, new LootPagesMenu(configManager, plugin, this, lootManager));
         this.lootEditMenu = new LootEditMenu(configManager, plugin, this, lootManager);
