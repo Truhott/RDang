@@ -7,13 +7,14 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.jetbrains.annotations.NotNull;
 import ru.truhot.rdang.util.logger.Logger;
 
 import java.util.UUID;
 
 public class HeadUtil {
 
-    public static ItemStack createSkullBase64(String base64, String sectionName) {
+    public static @NotNull ItemStack createSkullBase64(String base64, String sectionName) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         if (base64 == null || base64.isEmpty()) {
             Logger.warn("отсутствует текстура головы в секции: " + sectionName);
@@ -27,7 +28,7 @@ public class HeadUtil {
         return head;
     }
 
-    public static ItemStack createSkull(String input, String sectionName) {
+    public static @NotNull ItemStack createSkull(String input, String sectionName) {
         if (input == null || input.isEmpty()) {
             Logger.warn("значение материала пусто в секции: " + sectionName);
             return new ItemStack(Material.PLAYER_HEAD);

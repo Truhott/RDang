@@ -37,6 +37,24 @@
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <relocations>
+                <relocation>
+                  <pattern>net.kyori</pattern>
+                  <shadedPattern>ru.truhot.rdang.lib.kyori</shadedPattern>
+                </relocation>
+              </relocations>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -68,15 +86,19 @@
           <scope>provided</scope>
       </dependency>
       <dependency>
+          <groupId>net.kyori</groupId>
+          <artifactId>adventure-text-minimessage</artifactId>
+          <version>4.13.1</version>
+      </dependency>
+      <dependency>
+          <groupId>net.kyori</groupId>
+          <artifactId>adventure-text-serializer-legacy</artifactId>
+          <version>4.13.1</version>
+      </dependency>
+      <dependency>
           <groupId>org.projectlombok</groupId>
           <artifactId>lombok</artifactId>
           <version>1.18.32</version>
-          <scope>provided</scope>
-      </dependency>
-      <dependency>
-          <groupId>com.mojang</groupId>
-          <artifactId>authlib</artifactId>
-          <version>1.5.21</version>
           <scope>provided</scope>
       </dependency>
       <dependency>
